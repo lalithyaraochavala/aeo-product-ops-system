@@ -8,9 +8,10 @@ from sqlmodel import Session, select
 from .agents.aeo_signal import run_aeo_signal_agent
 from .agents.competitive_intel import run_competitive_intel_agent
 from .agents.content_strategy import run_content_strategy_agent
+from .agents.pm_synthesizer import run_pm_synthesizer_agent
 from .agents.technical_seo import run_technical_seo_agent
 from .db import create_db_and_tables, get_session
-from .models import AgentResult, Run
+from .models import AgentResult, RoadmapItem, Run
 
 app = FastAPI(title="AEO Product Ops System API")
 
@@ -134,3 +135,49 @@ def run_competitive_intel(run_id: uuid.UUID, session: Session = Depends(get_sess
     session.commit()
     session.refresh(result)
     return result
+
+
+@app.post("/runs/{run_id}/synthesize", response_model=AgentResult)
+def synthesize(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    try:
+        output = run_pm_synthesizer_agent(run_id, session)
+        status = "success"
+    except ValueError as exc:
+        output = {"error": str(exc)}
+        status = "error"
+
+    result = AgentResult(run_id=run.id, agent_name="pm_synthesizer", raw_output=output, status=status)
+    session.add(result)
+
+    if status == "success":
+        for item in output["roadmap"]:
+            session.add(RoadmapItem(
+                run_id=run.id,
+                title=item["title"],
+                reach=item["reach"],
+                impact=item["impact"],
+                confidence=item["confidence"],
+                effort=item["effort"],
+                rice_score=item["rice_score"],
+                description=item["description"],
+                status="open",
+            ))
+
+    session.commit()
+    session.refresh(result)
+    return result
+
+
+@app.get("/runs/{run_id}/roadmap", response_model=list[RoadmapItem])
+def get_roadmap(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    return session.exec(
+        select(RoadmapItem).where(RoadmapItem.run_id == run_id).order_by(RoadmapItem.rice_score.desc())
+    ).all()
