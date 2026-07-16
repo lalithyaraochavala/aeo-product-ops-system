@@ -36,10 +36,22 @@ def mock_generate_competitive_benchmark(aeo_signal_output: dict) -> dict:
         domain: round(count / total_queries, 2) for domain, count in citation_counts.items()
     }
 
-    leader = max(citation_share, key=citation_share.get) if citation_share else target_domain
-    if leader == target_domain:
+    if citation_share:
+        top_share = max(citation_share.values())
+        leaders = [domain for domain, share in citation_share.items() if share == top_share]
+    else:
+        top_share = 0
+        leaders = [target_domain]
+
+    if top_share == 0:
+        narrative = "No domain was cited for the queries tested — there's no established citation leader yet, which is an opportunity to be the first cited source."
+    elif len(leaders) > 1:
+        tied_domains = ", ".join(leaders)
+        narrative = f"It's a tie for citation share leadership between {tied_domains}. No single domain has pulled ahead yet."
+    elif leaders[0] == target_domain:
         narrative = f"{target_domain} currently leads citation share among the tracked domains, but should keep closing gaps on the queries listed below."
     else:
+        leader = leaders[0]
         narrative = f"{leader} currently leads citation share over {target_domain}. The clearest opportunity is closing the gap on the queries where competitors are cited and {target_domain} is not."
 
     return {

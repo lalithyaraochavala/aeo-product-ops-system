@@ -6,3 +6,4 @@ beautifulsoup4
 extruct
 anthropic
 python-dotenv
+pytest

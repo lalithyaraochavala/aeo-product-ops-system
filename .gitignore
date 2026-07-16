@@ -11,6 +11,7 @@ __pycache__/
 venv/
 *.db
 *.sqlite3
+.pytest_cache/
 
 # Node / Next.js
 node_modules/
