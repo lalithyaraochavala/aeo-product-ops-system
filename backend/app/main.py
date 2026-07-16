@@ -1,11 +1,13 @@
 import uuid
 
+import requests
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 
+from .agents.technical_seo import run_technical_seo_agent
 from .db import create_db_and_tables, get_session
-from .models import Run
+from .models import AgentResult, Run
 
 app = FastAPI(title="AEO Product Ops System API")
 
@@ -49,3 +51,23 @@ def get_run(run_id: uuid.UUID, session: Session = Depends(get_session)):
     if run is None:
         raise HTTPException(status_code=404, detail="Run not found")
     return run
+
+
+@app.post("/runs/{run_id}/technical-seo", response_model=AgentResult)
+def run_technical_seo(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    try:
+        output = run_technical_seo_agent(run.target_url)
+        status = "success"
+    except requests.RequestException as exc:
+        output = {"error": str(exc)}
+        status = "error"
+
+    result = AgentResult(run_id=run.id, agent_name="technical_seo", raw_output=output, status=status)
+    session.add(result)
+    session.commit()
+    session.refresh(result)
+    return result
