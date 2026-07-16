@@ -5,6 +5,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 
+from .agents.aeo_signal import run_aeo_signal_agent
 from .agents.technical_seo import run_technical_seo_agent
 from .db import create_db_and_tables, get_session
 from .models import AgentResult, Run
@@ -67,6 +68,26 @@ def run_technical_seo(run_id: uuid.UUID, session: Session = Depends(get_session)
         status = "error"
 
     result = AgentResult(run_id=run.id, agent_name="technical_seo", raw_output=output, status=status)
+    session.add(result)
+    session.commit()
+    session.refresh(result)
+    return result
+
+
+@app.post("/runs/{run_id}/aeo-signal", response_model=AgentResult)
+def run_aeo_signal(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    run = session.get(Run, run_id)
+    if run is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    try:
+        output = run_aeo_signal_agent(run_id, session)
+        status = "success"
+    except ValueError as exc:
+        output = {"error": str(exc)}
+        status = "error"
+
+    result = AgentResult(run_id=run.id, agent_name="aeo_signal", raw_output=output, status=status)
     session.add(result)
     session.commit()
     session.refresh(result)
