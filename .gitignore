@@ -23,3 +23,4 @@ dist/
 # Editor
 .vscode/
 .idea/
+frontend/package-lock.json

@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+sqlmodel
+requests
+beautifulsoup4
+extruct
+anthropic
+python-dotenv
