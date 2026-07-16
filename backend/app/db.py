@@ -1,7 +1,10 @@
 import os
+import uuid
 
 from dotenv import load_dotenv
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel, create_engine, select
+
+from .models import AgentResult
 
 load_dotenv()
 
@@ -18,3 +21,11 @@ def create_db_and_tables() -> None:
 def get_session():
     with Session(engine) as session:
         yield session
+
+
+def get_latest_agent_result(session: Session, run_id: uuid.UUID, agent_name: str):
+    return session.exec(
+        select(AgentResult)
+        .where(AgentResult.run_id == run_id, AgentResult.agent_name == agent_name)
+        .order_by(AgentResult.created_at.desc())
+    ).first()
