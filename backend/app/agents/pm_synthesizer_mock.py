@@ -4,6 +4,8 @@
 # top item, and a plain-English stakeholder summary, returning this same
 # JSON shape.
 
+from __future__ import annotations
+
 import hashlib
 import re
 
