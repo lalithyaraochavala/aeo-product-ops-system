@@ -23,7 +23,7 @@ export default function RerunButton({ runId }: { runId: string }) {
   }
 
   return (
-    <div className="flex flex-col items-end gap-1">
+    <div className="flex flex-col items-start gap-1">
       <button
         onClick={handleClick}
         disabled={loading}

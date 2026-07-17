@@ -26,8 +26,7 @@ export default async function HistoryPage() {
               <tr className="border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted">
                 <th className="px-4 py-3 font-medium">Target URL</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Created</th>
-                <th className="px-4 py-3 font-medium"></th>
+                <th className="hidden px-4 py-3 font-medium sm:table-cell">Created</th>
               </tr>
             </thead>
             <tbody>
@@ -38,11 +37,13 @@ export default async function HistoryPage() {
                       {run.target_url}
                     </Link>
                     {run.parent_run_id && <span className="ml-2 text-xs text-muted">(re-run)</span>}
+                    <div className="mt-1">
+                      <RerunButton runId={run.id} />
+                    </div>
                   </td>
                   <td className="px-4 py-3">{run.status}</td>
-                  <td className="px-4 py-3 text-muted">{new Date(run.created_at).toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <RerunButton runId={run.id} />
+                  <td className="hidden px-4 py-3 text-muted sm:table-cell">
+                    {new Date(run.created_at).toLocaleString()}
                   </td>
                 </tr>
               ))}
