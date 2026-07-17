@@ -66,4 +66,41 @@ def test_prd_problem_statement_and_proposed_solution_are_not_duplicates():
     prd = result["prd"]
     assert prd["problem_statement"] != prd["proposed_solution"]
     assert "JSON-LD structured data" in prd["proposed_solution"]
-    assert "citing" in prd["problem_statement"].lower()
+    assert "cite" in prd["problem_statement"].lower()
+
+
+def test_high_citation_rate_tie_is_framed_as_defending_a_lead_not_a_gap():
+    """A 100% tie is the exact case that exposed the bug: text assumed
+    citation_rate was always a problem to close ("only 100%", "improves
+    from 100%"), which reads as contradictory when the rate is already
+    high and tied rather than low."""
+    aeo_signal_high_tie = {
+        "target_domain": "acme.com",
+        "citation_rate": 1.0,
+        "query_results": [
+            {
+                "query": "best widget",
+                "target_cited": True,
+                "target_reasoning": "acme.com was cited for \"best widget\".",
+                "competitors": [{"url": "https://competitor.com", "cited": True, "reasoning": "competitor.com was cited."}],
+            },
+        ],
+    }
+    competitive_intel_high_tie = {
+        "citation_share": {"acme.com": 1.0, "https://competitor.com": 1.0},
+        "queries_losing": [],
+        "narrative": "It's a tie for citation share leadership between acme.com, https://competitor.com. No single domain has pulled ahead yet.",
+    }
+
+    result = mock_synthesize(
+        TECHNICAL_SEO_OUTPUT, aeo_signal_high_tie, CONTENT_STRATEGY_OUTPUT, competitive_intel_high_tie
+    )
+
+    prd = result["prd"]
+    assert "only 100%" not in prd["problem_statement"]
+    assert "improves from 100%" not in prd["success_metric"]
+    assert "100%" in prd["success_metric"]
+
+    summary = result["stakeholder_summary"]
+    assert "only 100%" not in summary
+    assert "already cite acme.com in 100%" in summary

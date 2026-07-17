@@ -18,6 +18,32 @@ _TOPIC_KEYWORDS = {
     "h1": ["h1 heading", "h1"],
 }
 
+# At or above this citation_rate, framing shifts from "close the gap" to
+# "defend the lead" — "improves from 100%" or "only 100%" reads as
+# contradictory, so text generation branches on this threshold.
+_HIGH_CITATION_RATE_THRESHOLD = 0.7
+
+
+def _citation_rate_clause(citation_rate: float, target_domain: str) -> str:
+    """A standalone sentence describing current citation standing, framed
+    appropriately for a low rate (a gap to close) vs. a high rate (a lead
+    to defend)."""
+    if citation_rate >= _HIGH_CITATION_RATE_THRESHOLD:
+        return f"AI answer engines already cite {target_domain} in {citation_rate:.0%} of the buyer queries we tested"
+    return f"AI answer engines cite {target_domain} in only {citation_rate:.0%} of the buyer queries we tested"
+
+
+def _success_metric(citation_rate: float, target_domain: str) -> str:
+    if citation_rate >= _HIGH_CITATION_RATE_THRESHOLD:
+        return (
+            f"Citation rate for {target_domain} holds at {citation_rate:.0%} or better on the next AEO Signal "
+            f"re-test, confirming this strong position is defended rather than lost to competitors."
+        )
+    return (
+        f"Citation rate for {target_domain} improves from {citation_rate:.0%} on the next AEO Signal re-test "
+        f"of the same buyer queries."
+    )
+
 
 def _topic_for(text: str) -> str | None:
     text_lower = text.lower()
@@ -159,9 +185,9 @@ def _build_prd(top_item: dict, aeo_signal_output: dict) -> dict:
     if source == "technical_seo":
         issue_name = top_item["title"].removeprefix("Fix: ")
         problem_statement = (
-            f"AI answer engines aren't citing {target_domain} for {citation_rate:.0%} of the buyer queries "
-            f"we tested. The technical SEO audit found a likely contributor: {issue_name}. Without it, answer "
-            f"engines have a harder time parsing what the page is actually about."
+            f"{_citation_rate_clause(citation_rate, target_domain)}. The technical SEO audit found a likely "
+            f"contributor: {issue_name}. Without it, answer engines have a harder time parsing what the page "
+            f"is actually about."
         )
         proposed_solution = clean_description
     elif source == "aeo_signal":
@@ -184,8 +210,8 @@ def _build_prd(top_item: dict, aeo_signal_output: dict) -> dict:
         )
     elif source == "content_strategy":
         problem_statement = (
-            f"{target_domain} is cited in only {citation_rate:.0%} of buyer queries tested, and is missing "
-            f"on-page content structure that AI answer engines typically pull citable answers from."
+            f"{_citation_rate_clause(citation_rate, target_domain)}, and the page is missing on-page content "
+            f"structure that AI answer engines typically pull citable answers from."
         )
         proposed_solution = clean_description
     else:  # monitoring fallback
@@ -199,10 +225,7 @@ def _build_prd(top_item: dict, aeo_signal_output: dict) -> dict:
         "title": top_item["title"],
         "problem_statement": problem_statement,
         "proposed_solution": proposed_solution,
-        "success_metric": (
-            f"Citation rate for {target_domain} improves from {citation_rate:.0%} on the next AEO Signal re-test "
-            f"of the same buyer queries."
-        ),
+        "success_metric": _success_metric(citation_rate, target_domain),
         "scope_in": [top_item["title"], "Re-testing the same buyer queries after the fix ships"],
         "scope_out": ["Unrelated roadmap items", "New buyer queries not already part of this run"],
     }
@@ -218,11 +241,22 @@ def _build_stakeholder_summary(
     top_item = roadmap[0]
     narrative = competitive_intel_output.get("narrative", "")
 
+    if citation_rate >= _HIGH_CITATION_RATE_THRESHOLD:
+        closing = (
+            "We recommend starting there to help defend this position, then re-testing to confirm citation "
+            "rates hold steady before moving to the rest of the roadmap."
+        )
+    else:
+        closing = (
+            "We recommend starting there, then re-testing to confirm citation rates improve before moving to "
+            "the rest of the roadmap."
+        )
+
     return (
-        f"Right now, AI search tools cite {target_domain} in only {citation_rate:.0%} of the buyer questions we tested. "
+        f"Right now, {_citation_rate_clause(citation_rate, target_domain)}. "
         f"{narrative} "
-        f"The single highest-priority fix is: {top_item['title']}. "
-        f"We recommend starting there, then re-testing to confirm citation rates improve before moving to the rest of the roadmap."
+        f"The single highest-priority action is: {top_item['title']}. "
+        f"{closing}"
     )
 
 
