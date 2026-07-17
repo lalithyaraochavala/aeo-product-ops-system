@@ -1,5 +1,7 @@
+import os
 import uuid
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
@@ -15,11 +17,21 @@ from .db import create_db_and_tables, get_latest_agent_result, get_session
 from .models import AgentResult, RoadmapItem, Run, RunCreate
 from .orchestrator import run_full_pipeline
 
+load_dotenv()
+
+# Comma-separated list of allowed frontend origins, e.g.
+# "http://localhost:3000,https://my-app.vercel.app". Defaults to local dev.
+_allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
+    if origin.strip()
+]
+
 app = FastAPI(title="AEO Product Ops System API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
