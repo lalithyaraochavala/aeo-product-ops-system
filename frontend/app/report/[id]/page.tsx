@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AgentFindingsTabs from "@/components/AgentFindingsTabs";
+import AtAGlance from "@/components/AtAGlance";
 import LinkedText from "@/components/LinkedText";
 import {
   getAgentFindings,
@@ -50,6 +51,27 @@ export default async function ReportPage({ params }: { params: { id: string } })
         )}
       </div>
 
+      {report &&
+        roadmap.length > 0 &&
+        agentFindings?.aeo_signal?.status === "success" &&
+        "citation_rate" in agentFindings.aeo_signal.raw_output && (
+          <AtAGlance
+            citationRate={agentFindings.aeo_signal.raw_output.citation_rate}
+            targetDomain={agentFindings.aeo_signal.raw_output.target_domain}
+            citationShare={
+              agentFindings.competitive_intel?.status === "success" &&
+              "citation_share" in agentFindings.competitive_intel.raw_output
+                ? agentFindings.competitive_intel.raw_output.citation_share
+                : null
+            }
+            totalQueries={agentFindings.aeo_signal.raw_output.query_results.length}
+            citedQueries={
+              agentFindings.aeo_signal.raw_output.query_results.filter((q) => q.target_cited).length
+            }
+            topRoadmapTitle={roadmap[0].title}
+          />
+        )}
+
       {report?.comparison && <ComparisonSection comparison={report.comparison} />}
 
       {report && (
@@ -65,6 +87,9 @@ export default async function ReportPage({ params }: { params: { id: string } })
 
       <section>
         <h2 className="text-lg font-semibold">RICE-Scored Roadmap</h2>
+        <p className="mt-1 text-xs text-muted">
+          Prioritized by potential impact vs. effort required — higher score means do this first.
+        </p>
         {roadmap.length === 0 ? (
           <p className="mt-3 text-sm text-muted">No roadmap items yet — the synthesis step may not have run.</p>
         ) : (
@@ -73,11 +98,24 @@ export default async function ReportPage({ params }: { params: { id: string } })
               <thead>
                 <tr className="border-b border-border bg-card text-left text-xs uppercase tracking-wide text-muted">
                   <th className="px-4 py-3 font-medium">Title</th>
-                  <th className="px-4 py-3 font-medium">Reach</th>
-                  <th className="px-4 py-3 font-medium">Impact</th>
-                  <th className="px-4 py-3 font-medium">Confidence</th>
-                  <th className="px-4 py-3 font-medium">Effort</th>
-                  <th className="px-4 py-3 font-medium">RICE</th>
+                  <th className="px-4 py-3 font-medium" title="How many people this reaches">
+                    Reach
+                  </th>
+                  <th className="px-4 py-3 font-medium" title="How much this moves the needle if it works">
+                    Impact
+                  </th>
+                  <th className="px-4 py-3 font-medium" title="How sure we are this will work">
+                    Confidence
+                  </th>
+                  <th className="px-4 py-3 font-medium" title="How much work this takes to ship">
+                    Effort
+                  </th>
+                  <th
+                    className="px-4 py-3 font-medium"
+                    title="Overall priority score: (Reach × Impact × Confidence) ÷ Effort — higher is more worth doing first"
+                  >
+                    RICE
+                  </th>
                 </tr>
               </thead>
               <tbody>

@@ -12,10 +12,10 @@ import type {
 } from "@/lib/api";
 
 const TABS = [
-  { key: "technical_seo", label: "Technical SEO" },
-  { key: "aeo_signal", label: "AEO Signal" },
-  { key: "content_strategy", label: "Content Strategy" },
-  { key: "competitive_intel", label: "Competitive Intel" },
+  { key: "technical_seo", label: "Technical SEO", hint: "How well the page's code/markup helps AI understand it" },
+  { key: "aeo_signal", label: "AEO Signal", hint: "Whether real AI search tools actually cite this page" },
+  { key: "content_strategy", label: "Content Strategy", hint: "Specific writing/content changes recommended" },
+  { key: "competitive_intel", label: "Competitive Intel", hint: "How this compares to the competitors you listed" },
 ] as const;
 
 type TabKey = (typeof TABS)[number]["key"];
@@ -26,11 +26,15 @@ export default function AgentFindingsTabs({ findings }: { findings: AgentFinding
   return (
     <section>
       <h2 className="text-lg font-semibold">Agent Findings</h2>
+      <p className="mt-1 text-xs text-muted">
+        The detailed technical results behind the summary above, organized by specialist.
+      </p>
       <div className="mt-3 flex flex-wrap gap-1 border-b border-border">
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActive(tab.key)}
+            title={tab.hint}
             className={`rounded-t px-4 py-2 text-sm font-medium ${
               active === tab.key
                 ? "border-b-2 border-accent text-accent"
@@ -109,9 +113,15 @@ function TechnicalSeoPanel({ finding }: { finding: AgentFinding<TechnicalSeoOutp
 
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-muted">Raw Findings</p>
+        <p className="mt-1 text-xs text-muted">
+          JSON-LD is a small block of code that tells AI tools what a page is about — its absence is a common
+          reason pages don&apos;t get cited.
+        </p>
         <dl className="mt-2 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
           <div className="flex justify-between sm:block">
-            <dt className="text-muted">JSON-LD present</dt>
+            <dt className="text-muted" title="A code block that clearly labels what the page is about for AI/search tools">
+              JSON-LD present
+            </dt>
             <dd className="font-mono">{raw_findings.json_ld_present ? "yes" : "no"}</dd>
           </div>
           <div className="flex justify-between sm:block">
