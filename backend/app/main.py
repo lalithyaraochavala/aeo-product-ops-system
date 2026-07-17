@@ -10,7 +10,7 @@ from .agents.competitive_intel import run_competitive_intel_agent
 from .agents.content_strategy import run_content_strategy_agent
 from .agents.pm_synthesizer import run_pm_synthesizer_agent
 from .agents.technical_seo import run_technical_seo_agent
-from .db import create_db_and_tables, get_session
+from .db import create_db_and_tables, get_latest_agent_result, get_session
 from .models import AgentResult, RoadmapItem, Run
 from .orchestrator import run_full_pipeline
 
@@ -124,3 +124,12 @@ def get_roadmap(run_id: uuid.UUID, session: Session = Depends(get_session)):
 def run_full_pipeline_endpoint(run_id: uuid.UUID, session: Session = Depends(get_session)):
     _get_run_or_404(run_id, session)
     return run_full_pipeline(run_id, session)
+
+
+@app.get("/runs/{run_id}/report")
+def get_report(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    _get_run_or_404(run_id, session)
+    result = get_latest_agent_result(session, run_id, "pm_synthesizer")
+    if result is None or result.status != "success":
+        raise HTTPException(status_code=404, detail="No completed synthesis report for this run yet")
+    return result.raw_output
