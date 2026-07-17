@@ -49,6 +49,10 @@ export default async function ReportPage({ params }: { params: { id: string } })
         {statusExplanation(run.status) && (
           <p className="mt-2 text-sm text-muted">{statusExplanation(run.status)}</p>
         )}
+        <p className="mt-2 text-xs text-muted">
+          Note: this report uses simulated agent data for demo purposes. Connect a real Anthropic API key to
+          generate live citation results.
+        </p>
       </div>
 
       {report &&

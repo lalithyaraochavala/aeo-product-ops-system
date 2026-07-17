@@ -18,7 +18,17 @@ Simulates a small cross-functional product team as five agents:
 
 The system closes the loop: re-run an audit against the same target/competitors/queries and it links the new run back to the original (`parent_run_id`), computes a citation-rate before/after comparison, and marks roadmap items as resolved once the underlying finding is fixed.
 
-> **Current state:** the orchestration, database, and both the FastAPI backend and Next.js frontend are fully built and wired end-to-end. The five agents' "AI interpretation" step is currently mocked (clearly marked `# MOCKED` in each agent file) rather than calling the real Anthropic API, since that requires billing to be configured — swapping in the real call is a one-line change per agent once that's set up. The Technical SEO Agent's page fetch/parse *is* real (not mocked).
+## How this works (and what's mocked)
+
+**All 5 agents — Technical SEO, AEO Signal, Content Strategy, Competitive Intel, and PM Synthesizer — currently run on deterministic mocked logic, not real Anthropic API calls.** This is by design: real Claude API access requires billing to be configured, which isn't set up for this build, so each agent file is clearly marked `# MOCKED — replace with real Anthropic API call once billing is set up`.
+
+What's real vs. simulated, agent by agent:
+
+- **Technical SEO** does make a real HTTP fetch of the target page — the schema/JSON-LD, title/meta, and heading data it reports is genuinely scraped from the live page. Only the interpretation and scoring on top of that real data is mocked.
+- **AEO Signal** and **Competitive Intel** are fully simulated: citation results are generated deterministically (a hash of `domain + query`, so the same input always produces the same output) rather than by actually asking an AI search engine whether it cites the page. They do not reflect real AI search behavior.
+- **Content Strategy** and **PM Synthesizer** are template-based logic over the other agents' (real or mocked) outputs, not LLM-generated text.
+
+Adding a real `ANTHROPIC_API_KEY` plus wiring the Anthropic `web_search` tool into the AEO Signal and Competitive Intel agents (per Doc 02 of `docs/project-docs.md`) is what would turn this from an architecture demo into a live measurement tool — the orchestration, database, and frontend around it are already built to support that swap without other changes.
 
 ## Architecture
 
