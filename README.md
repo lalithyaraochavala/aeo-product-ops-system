@@ -2,6 +2,12 @@
 
 A multi-agent system that audits, tests, and prioritizes what to fix for AI-answer-engine visibility — built to explore how product management works when "search" means being cited by ChatGPT/Perplexity/AI Overviews instead of ranking on a results page.
 
+## 🚀 Live Demo
+
+**[aeo-product-ops-system.vercel.app](https://aeo-product-ops-system.vercel.app)** *(placeholder — replace with the real deployed URL if this isn't it)*
+
+**Status:** ✅ Live — deployed on Railway (backend) + Vercel (frontend). All 5 agents currently run on mocked/simulated logic rather than real Anthropic API calls — see [How this works (and what's mocked)](#how-this-works-and-whats-mocked) below for the full breakdown.
+
 ## The problem
 
 A growing share of search queries now get answered directly by AI, with no click-through to a website. Companies have spent 20 years optimizing for traditional ranking factors, but there's no simple, repeatable way to measure whether a page is actually structured to be *cited* by an AI answer engine, or to turn that signal into a prioritized action plan the way SEO tools have long done for search ranking.
@@ -59,6 +65,8 @@ flowchart TD
 - **Database**: SQLite (`runs`, `agent_results`, `roadmap_items` — see `docs/project-docs.md` Doc 05 for the full schema).
 
 ## Local setup
+
+> A live version is already deployed (see [Live Demo](#-live-demo) above) — you only need this section if you want to run the project locally yourself.
 
 **Backend:**
 ```bash
