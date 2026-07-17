@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RerunButton from "@/components/RerunButton";
 import { listRuns } from "@/lib/api";
 
 export default async function HistoryPage() {
@@ -26,6 +27,7 @@ export default async function HistoryPage() {
                 <th className="px-4 py-3 font-medium">Target URL</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Created</th>
+                <th className="px-4 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody>
@@ -35,9 +37,13 @@ export default async function HistoryPage() {
                     <Link href={`/report/${run.id}`} className="font-mono text-accent hover:underline">
                       {run.target_url}
                     </Link>
+                    {run.parent_run_id && <span className="ml-2 text-xs text-muted">(re-run)</span>}
                   </td>
                   <td className="px-4 py-3">{run.status}</td>
                   <td className="px-4 py-3 text-muted">{new Date(run.created_at).toLocaleString()}</td>
+                  <td className="px-4 py-3 text-right">
+                    <RerunButton runId={run.id} />
+                  </td>
                 </tr>
               ))}
             </tbody>

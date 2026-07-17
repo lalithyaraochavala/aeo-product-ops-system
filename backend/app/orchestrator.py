@@ -8,6 +8,7 @@ from .agents.competitive_intel import run_competitive_intel_agent
 from .agents.content_strategy import run_content_strategy_agent
 from .agents.pm_synthesizer import run_pm_synthesizer_agent
 from .agents.technical_seo import run_technical_seo_agent
+from .comparison import resolve_parent_roadmap_items
 from .models import RoadmapItem, Run
 
 # Agents run in dependency order: content_strategy needs technical_seo +
@@ -57,6 +58,8 @@ def run_full_pipeline(run_id: uuid.UUID, session: Session) -> dict:
                 status="open",
             ))
         session.commit()
+
+    resolve_parent_roadmap_items(session, run)
 
     if synth_result.status == "error":
         run.status = "failed"

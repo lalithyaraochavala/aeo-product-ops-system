@@ -10,6 +10,7 @@ from .agents.competitive_intel import run_competitive_intel_agent
 from .agents.content_strategy import run_content_strategy_agent
 from .agents.pm_synthesizer import run_pm_synthesizer_agent
 from .agents.technical_seo import run_technical_seo_agent
+from .comparison import build_comparison
 from .db import create_db_and_tables, get_latest_agent_result, get_session
 from .models import AgentResult, RoadmapItem, Run, RunCreate
 from .orchestrator import run_full_pipeline
@@ -131,8 +132,26 @@ def run_full_pipeline_endpoint(run_id: uuid.UUID, session: Session = Depends(get
 
 @app.get("/runs/{run_id}/report")
 def get_report(run_id: uuid.UUID, session: Session = Depends(get_session)):
-    _get_run_or_404(run_id, session)
+    run = _get_run_or_404(run_id, session)
     result = get_latest_agent_result(session, run_id, "pm_synthesizer")
     if result is None or result.status != "success":
         raise HTTPException(status_code=404, detail="No completed synthesis report for this run yet")
-    return result.raw_output
+
+    report = dict(result.raw_output)
+    report["comparison"] = build_comparison(session, run)
+    return report
+
+
+@app.post("/runs/{run_id}/rerun", response_model=Run)
+def rerun(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    original = _get_run_or_404(run_id, session)
+    new_run = Run(
+        target_url=original.target_url,
+        competitor_urls=original.competitor_urls,
+        buyer_queries=original.buyer_queries,
+        parent_run_id=original.id,
+    )
+    session.add(new_run)
+    session.commit()
+    session.refresh(new_run)
+    return new_run

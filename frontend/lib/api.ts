@@ -32,10 +32,24 @@ export type Prd = {
   scope_out: string[];
 };
 
+export type ParentRoadmapItem = {
+  id: string;
+  title: string;
+  status: string;
+};
+
+export type Comparison = {
+  parent_run_id: string;
+  citation_rate_before: number;
+  citation_rate_after: number;
+  parent_roadmap: ParentRoadmapItem[];
+};
+
 export type Report = {
   roadmap: RoadmapItem[];
   prd: Prd;
   stakeholder_summary: string;
+  comparison: Comparison | null;
 };
 
 export type PipelineStep = {
@@ -88,4 +102,8 @@ export function getRoadmap(runId: string): Promise<RoadmapItem[]> {
 
 export function getReport(runId: string): Promise<Report> {
   return apiFetch<Report>(`/runs/${runId}/report`);
+}
+
+export function rerun(runId: string): Promise<Run> {
+  return apiFetch<Run>(`/runs/${runId}/rerun`, { method: "POST" });
 }

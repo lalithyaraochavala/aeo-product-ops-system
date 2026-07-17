@@ -1,6 +1,6 @@
 import Link from "next/link";
 import LinkedText from "@/components/LinkedText";
-import { getReport, getRoadmap, getRun, type Report, type RoadmapItem, type Run } from "@/lib/api";
+import { getReport, getRoadmap, getRun, type Comparison, type Report, type RoadmapItem, type Run } from "@/lib/api";
 
 export default async function ReportPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -34,6 +34,8 @@ export default async function ReportPage({ params }: { params: { id: string } })
           Run {run.id} · {new Date(run.created_at).toLocaleString()}
         </p>
       </div>
+
+      {report?.comparison && <ComparisonSection comparison={report.comparison} />}
 
       {report && (
         <section>
@@ -136,6 +138,61 @@ function PrdField({ label, text }: { label: string; text: string }) {
       <p className="mt-1 text-sm leading-relaxed">
         <LinkedText text={text} />
       </p>
+    </div>
+  );
+}
+
+function ComparisonSection({ comparison }: { comparison: Comparison }) {
+  const beforePct = Math.round(comparison.citation_rate_before * 100);
+  const afterPct = Math.round(comparison.citation_rate_after * 100);
+
+  return (
+    <section>
+      <h2 className="text-lg font-semibold">Before / After Comparison</h2>
+      <p className="mt-1 text-xs text-muted">
+        Compared against{" "}
+        <Link href={`/report/${comparison.parent_run_id}`} className="text-accent hover:underline">
+          the original run
+        </Link>
+      </p>
+
+      <div className="mt-3 space-y-3 rounded border border-border bg-card px-5 py-4">
+        <CitationBar label="Before" percent={beforePct} />
+        <CitationBar label="After" percent={afterPct} />
+      </div>
+
+      <div className="mt-4 rounded border border-border bg-card px-5 py-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-muted">Original Roadmap Progress</p>
+        <ul className="mt-2 space-y-2 text-sm">
+          {comparison.parent_roadmap.map((item) => (
+            <li key={item.id} className="flex items-center gap-2">
+              {item.status === "resolved" ? (
+                <span className="text-cited">✓</span>
+              ) : (
+                <span className="text-muted">○</span>
+              )}
+              <span className={item.status === "resolved" ? "text-muted line-through" : ""}>
+                <LinkedText text={item.title} />
+              </span>
+              <span className="text-xs text-muted">({item.status})</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function CitationBar({ label, percent }: { label: string; percent: number }) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs text-muted">
+        <span>{label}</span>
+        <span className="font-mono">{percent}%</span>
+      </div>
+      <div className="mt-1 h-3 w-full overflow-hidden rounded bg-border">
+        <div className="h-full rounded bg-accent" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }
