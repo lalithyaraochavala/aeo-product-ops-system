@@ -55,8 +55,17 @@ class RunCreate(BaseModel):
     @field_validator("competitor_urls")
     @classmethod
     def _validate_competitor_urls(cls, v: list[str]) -> list[str]:
+        if len(v) > 3:
+            raise ValueError("At most 3 competitor URLs are supported")
         for url in v:
             _require_valid_url(url)
+        return v
+
+    @field_validator("buyer_queries")
+    @classmethod
+    def _validate_buyer_queries(cls, v: list[str]) -> list[str]:
+        if not (1 <= len(v) <= 3):
+            raise ValueError("Between 1 and 3 buyer queries are required")
         return v
 
 

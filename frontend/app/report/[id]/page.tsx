@@ -33,6 +33,9 @@ export default async function ReportPage({ params }: { params: { id: string } })
         <p className="mt-1 text-xs text-muted">
           Run {run.id} · {new Date(run.created_at).toLocaleString()}
         </p>
+        {statusExplanation(run.status) && (
+          <p className="mt-2 text-sm text-muted">{statusExplanation(run.status)}</p>
+        )}
       </div>
 
       {report?.comparison && <ComparisonSection comparison={report.comparison} />}
@@ -124,11 +127,28 @@ export default async function ReportPage({ params }: { params: { id: string } })
 
       {!report && (
         <p className="text-sm text-muted">
-          No synthesis report is available for this run yet — the PM Synthesizer step may not have completed.
+          {run.status === "pending" || run.status === "running"
+            ? "This run hasn't finished yet — check back once it completes."
+            : "No synthesis report is available for this run — the PM Synthesizer step didn't produce one, most likely because none of the other agents completed successfully."}
         </p>
       )}
     </div>
   );
+}
+
+function statusExplanation(status: Run["status"]): string | null {
+  switch (status) {
+    case "partial":
+      return "Some agents couldn't complete for this run (e.g. the target or a competitor URL may be unreachable) — the report below reflects whatever data was available.";
+    case "failed":
+      return "This run failed before a report could be generated — most likely every agent it depended on also failed. Try again, or check that the target URL is reachable.";
+    case "pending":
+      return "This run hasn't started yet.";
+    case "running":
+      return "This run is still in progress.";
+    default:
+      return null;
+  }
 }
 
 function PrdField({ label, text }: { label: string; text: string }) {

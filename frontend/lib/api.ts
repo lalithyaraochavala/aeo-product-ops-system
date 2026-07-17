@@ -64,6 +64,25 @@ export type PipelineResult = {
   synthesizer_output: Report | null;
 };
 
+async function extractErrorMessage(res: Response): Promise<string> {
+  try {
+    const body = await res.json();
+    // FastAPI validation errors: {"detail": [{"msg": "...", "loc": [...]}, ...]}
+    if (Array.isArray(body?.detail)) {
+      return body.detail
+        .map((e: { msg?: string }) => e.msg?.replace(/^Value error,\s*/, "") ?? JSON.stringify(e))
+        .join("; ");
+    }
+    // Plain HTTPException errors: {"detail": "..."}
+    if (typeof body?.detail === "string") {
+      return body.detail;
+    }
+  } catch {
+    // response wasn't JSON — fall through to the generic message below
+  }
+  return `Request failed with status ${res.status}`;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
@@ -71,7 +90,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
   });
   if (!res.ok) {
-    throw new Error(`${init?.method ?? "GET"} ${path} failed with status ${res.status}`);
+    throw new Error(await extractErrorMessage(res));
   }
   return res.json();
 }
