@@ -11,7 +11,7 @@ from .agents.content_strategy import run_content_strategy_agent
 from .agents.pm_synthesizer import run_pm_synthesizer_agent
 from .agents.technical_seo import run_technical_seo_agent
 from .db import create_db_and_tables, get_latest_agent_result, get_session
-from .models import AgentResult, RoadmapItem, Run
+from .models import AgentResult, RoadmapItem, Run, RunCreate
 from .orchestrator import run_full_pipeline
 
 app = FastAPI(title="AEO Product Ops System API")
@@ -36,9 +36,12 @@ def health():
 
 
 @app.post("/runs", response_model=Run)
-def create_run(run: Run, session: Session = Depends(get_session)):
-    run.id = uuid.uuid4()
-    run.status = "pending"
+def create_run(payload: RunCreate, session: Session = Depends(get_session)):
+    run = Run(
+        target_url=payload.target_url,
+        competitor_urls=payload.competitor_urls,
+        buyer_queries=payload.buyer_queries,
+    )
     session.add(run)
     session.commit()
     session.refresh(run)
