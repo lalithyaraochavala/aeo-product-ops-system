@@ -1,6 +1,17 @@
 import Link from "next/link";
+import AgentFindingsTabs from "@/components/AgentFindingsTabs";
 import LinkedText from "@/components/LinkedText";
-import { getReport, getRoadmap, getRun, type Comparison, type Report, type RoadmapItem, type Run } from "@/lib/api";
+import {
+  getAgentFindings,
+  getReport,
+  getRoadmap,
+  getRun,
+  type AgentFindings,
+  type Comparison,
+  type Report,
+  type RoadmapItem,
+  type Run,
+} from "@/lib/api";
 
 export default async function ReportPage({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -17,9 +28,10 @@ export default async function ReportPage({ params }: { params: { id: string } })
     );
   }
 
-  const [roadmap, report] = await Promise.all([
+  const [roadmap, report, agentFindings] = await Promise.all([
     getRoadmap(id).catch(() => [] as RoadmapItem[]),
     getReport(id).catch(() => null as Report | null),
+    getAgentFindings(id).catch(() => null as AgentFindings | null),
   ]);
 
   return (
@@ -132,6 +144,8 @@ export default async function ReportPage({ params }: { params: { id: string } })
             : "No synthesis report is available for this run — the PM Synthesizer step didn't produce one, most likely because none of the other agents completed successfully."}
         </p>
       )}
+
+      {agentFindings && <AgentFindingsTabs findings={agentFindings} />}
     </div>
   );
 }

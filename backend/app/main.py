@@ -154,6 +154,21 @@ def get_report(run_id: uuid.UUID, session: Session = Depends(get_session)):
     return report
 
 
+_FINDINGS_AGENT_NAMES = ["technical_seo", "aeo_signal", "content_strategy", "competitive_intel"]
+
+
+@app.get("/runs/{run_id}/agent-findings")
+def get_agent_findings(run_id: uuid.UUID, session: Session = Depends(get_session)):
+    _get_run_or_404(run_id, session)
+    findings = {}
+    for agent_name in _FINDINGS_AGENT_NAMES:
+        result = get_latest_agent_result(session, run_id, agent_name)
+        findings[agent_name] = (
+            {"status": result.status, "raw_output": result.raw_output} if result is not None else None
+        )
+    return findings
+
+
 @app.post("/runs/{run_id}/rerun", response_model=Run)
 def rerun(run_id: uuid.UUID, session: Session = Depends(get_session)):
     original = _get_run_or_404(run_id, session)

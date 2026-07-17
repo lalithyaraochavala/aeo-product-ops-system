@@ -52,6 +52,77 @@ export type Report = {
   comparison: Comparison | null;
 };
 
+export type TechnicalSeoIssue = {
+  severity: "high" | "medium" | "low";
+  issue: string;
+  recommendation: string;
+};
+
+export type TechnicalSeoOutput = {
+  summary: string;
+  score: number;
+  issues: TechnicalSeoIssue[];
+  raw_findings: {
+    url: string;
+    json_ld_present: boolean;
+    json_ld_types: string[];
+    title: string | null;
+    meta_description: string | null;
+    h1_count: number;
+    h2_count: number;
+  };
+};
+
+export type AeoSignalCompetitor = {
+  url: string;
+  cited: boolean;
+  reasoning: string;
+};
+
+export type AeoSignalQueryResult = {
+  query: string;
+  target_cited: boolean;
+  target_reasoning: string;
+  competitors: AeoSignalCompetitor[];
+};
+
+export type AeoSignalOutput = {
+  target_domain: string;
+  citation_rate: number;
+  summary: string;
+  query_results: AeoSignalQueryResult[];
+};
+
+export type ContentStrategyRecommendation = {
+  recommendation: string;
+  based_on: string;
+};
+
+export type ContentStrategyOutput = {
+  summary: string;
+  recommendations: ContentStrategyRecommendation[];
+};
+
+export type CompetitiveIntelLosingQuery = {
+  query: string;
+  winning_competitors: string[];
+};
+
+export type CompetitiveIntelOutput = {
+  citation_share: Record<string, number>;
+  queries_losing: CompetitiveIntelLosingQuery[];
+  narrative: string;
+};
+
+export type AgentFinding<T> = { status: "success" | "error"; raw_output: T | { error: string } } | null;
+
+export type AgentFindings = {
+  technical_seo: AgentFinding<TechnicalSeoOutput>;
+  aeo_signal: AgentFinding<AeoSignalOutput>;
+  content_strategy: AgentFinding<ContentStrategyOutput>;
+  competitive_intel: AgentFinding<CompetitiveIntelOutput>;
+};
+
 export type PipelineStep = {
   agent: string;
   status: "success" | "error";
@@ -125,4 +196,8 @@ export function getReport(runId: string): Promise<Report> {
 
 export function rerun(runId: string): Promise<Run> {
   return apiFetch<Run>(`/runs/${runId}/rerun`, { method: "POST" });
+}
+
+export function getAgentFindings(runId: string): Promise<AgentFindings> {
+  return apiFetch<AgentFindings>(`/runs/${runId}/agent-findings`);
 }
