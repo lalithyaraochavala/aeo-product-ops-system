@@ -81,7 +81,7 @@
 
 | Field | Detail |
 |---|---|
-| **Table: runs** | `id (uuid, pk)`, `target_url (text)`, `competitor_urls (json)`, `buyer_queries (json)`, `status (text: pending/running/complete/failed)`, `created_at (timestamp)`, `parent_run_id (uuid, nullable, FK → runs.id)` — set when this run is a "re-run for comparison" of an earlier one |
+| **Table: runs** | `id (uuid, pk)`, `target_url (text)`, `competitor_urls (json)`, `buyer_queries (json)`, `status (text: pending/running/complete/partial/failed)`, `created_at (timestamp)`, `parent_run_id (uuid, nullable, FK → runs.id)` — set when this run is a "re-run for comparison" of an earlier one. `partial` means at least one agent failed but the PM Synthesizer still ran and produced a roadmap from whatever data was available. |
 | **Table: agent_results** | `id (uuid, pk)`, `run_id (uuid, FK → runs.id)`, `agent_name (text: technical_seo / aeo_signal / content_strategy / competitive_intel / pm_synthesizer)`, `raw_output (json)`, `status (text: success/error)`, `created_at (timestamp)` |
 | **Table: roadmap_items** | `id (uuid, pk)`, `run_id (uuid, FK → runs.id)`, `title (text)`, `reach (int)`, `impact (int)`, `confidence (int)`, `effort (int)`, `rice_score (float, computed)`, `description (text)`, `status (text: open/resolved)` — `status` flips to `resolved` on a comparison run if the underlying finding improved |
 | **Relationships** | `agent_results.run_id → runs.id` (many-to-one) · `roadmap_items.run_id → runs.id` (many-to-one) · `runs.parent_run_id → runs.id` (self-referencing, for before/after pairs) |
